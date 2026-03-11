@@ -131,7 +131,7 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(102,126,234,0.4);
     }
     
-    /* Sidebar */
+    /* Sidebar - DESKTOP */
     .css-1d391kg {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
     }
@@ -163,8 +163,83 @@ st.markdown("""
         margin: 5px;
     }
     
+    /* Botão de menu mobile */
+    .mobile-menu-button {
+        display: none;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 99999;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    /* Overlay para mobile */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 99997;
+        backdrop-filter: blur(3px);
+    }
+    
     /* ========== VERSÃO MOBILE ========== */
     @media only screen and (max-width: 768px) {
+        /* Mostrar botão de menu */
+        .mobile-menu-button {
+            display: block;
+        }
+        
+        /* Esconder sidebar por padrão no mobile */
+        section[data-testid="stSidebar"] {
+            display: none !important;
+        }
+        
+        /* Quando sidebar estiver visível */
+        body.sidebar-visible section[data-testid="stSidebar"] {
+            display: block !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 80% !important;
+            max-width: 300px !important;
+            height: 100vh !important;
+            z-index: 99998 !important;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%) !important;
+            animation: slideIn 0.3s ease;
+        }
+        
+        /* Overlay visível quando sidebar aberta */
+        body.sidebar-visible .sidebar-overlay {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Ajustar conteúdo principal */
+        .main .block-container {
+            padding-top: 70px !important;
+        }
+        
         /* Ajustar títulos */
         .section-title {
             font-size: 1.5rem;
@@ -198,16 +273,6 @@ st.markdown("""
         .numbers-container {
             gap: 5px;
             margin: 10px 0;
-        }
-        
-        /* Ajustar sidebar no mobile */
-        .css-1d391kg {
-            padding: 10px !important;
-        }
-        
-        .sidebar-title {
-            font-size: 1.2rem;
-            padding: 10px 0;
         }
         
         /* Ajustar botões */
@@ -248,19 +313,9 @@ st.markdown("""
             font-size: 0.8rem !important;
         }
         
-        /* Ajustar rodapé */
-        .footer-text {
-            font-size: 0.7rem !important;
-        }
-        
         /* Ajustar gráficos */
         .js-plotly-plot {
             height: 350px !important;
-        }
-        
-        /* Ajustar colunas para empilhar */
-        .row-widget.stHorizontal {
-            flex-direction: column !important;
         }
         
         /* Ajustar métricas em linha */
@@ -278,11 +333,6 @@ st.markdown("""
         .stTabs [data-baseweb="tab"] {
             padding: 5px 10px !important;
             font-size: 0.8rem !important;
-        }
-        
-        /* Ajustar sliders */
-        .stSlider {
-            padding: 10px 0 !important;
         }
         
         /* Ajustar selectboxes */
@@ -332,11 +382,6 @@ st.markdown("""
         .result-card p {
             font-size: 0.8rem;
         }
-        
-        /* Ajustar grid de jogos */
-        .stMarkdown {
-            font-size: 0.9rem;
-        }
     }
     
     /* Ajustes para tablets */
@@ -361,7 +406,7 @@ st.markdown("""
     /* Melhorias de touch para mobile */
     @media (hover: none) and (pointer: coarse) {
         .stButton > button {
-            min-height: 44px; /* Tamanho mínimo para toque */
+            min-height: 44px;
         }
         
         .copy-button {
@@ -377,6 +422,27 @@ st.markdown("""
         }
     }
 </style>
+<!-- Botão de menu mobile - ISSO FICA AQUI! -->
+<button class="mobile-menu-button" onclick="toggleSidebar()" id="mobileMenuBtn">☰</button>
+<div class="sidebar-overlay" onclick="toggleSidebar()" id="sidebarOverlay"></div>
+
+<script>
+function toggleSidebar() {
+    document.body.classList.toggle('sidebar-visible');
+}
+
+// Fechar sidebar ao clicar em um link
+document.addEventListener('DOMContentLoaded', function() {
+    const menuItems = document.querySelectorAll('[data-testid="stSidebar"] a, [data-testid="stSidebar"] button');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                document.body.classList.remove('sidebar-visible');
+            }
+        });
+    });
+});
+</script>
 """, unsafe_allow_html=True)
 
 # -------- SESSION --------
