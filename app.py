@@ -49,6 +49,7 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         color: white;
         transition: transform 0.3s ease;
+        margin-bottom: 15px;
     }
     
     .metric-card:hover {
@@ -131,8 +132,8 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(102,126,234,0.4);
     }
     
-    /* Sidebar - DESKTOP */
-    .css-1d391kg {
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
     }
     
@@ -151,6 +152,7 @@ st.markdown("""
         padding: 20px;
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         text-align: center;
+        margin-bottom: 15px;
     }
     
     .info-tag {
@@ -163,83 +165,85 @@ st.markdown("""
         margin: 5px;
     }
     
-    /* Botão de menu mobile */
-    .mobile-menu-button {
-        display: none;
+    /* Banner de doação */
+    .donation-banner {
         position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 99999;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        border: 2px solid rgba(255,255,255,0.3);
-    }
-    
-    /* Overlay para mobile */
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
+        bottom: 0;
         left: 0;
         right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 99997;
-        backdrop-filter: blur(3px);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 15px 20px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 -10px 30px rgba(102, 126, 234, 0.5);
+        z-index: 999;
+        border-top: 3px solid rgba(255, 255, 255, 0.3);
+        animation: slideUp 0.5s ease;
+        font-family: 'Arial', sans-serif;
+    }
+    
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .banner-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .pix-card {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 10px 20px;
+        border-radius: 50px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+    
+    .pix-card:hover {
+        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .copy-button {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 5px 15px;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .copy-button:hover {
+        transform: scale(1.1);
+        background: #f0f0f0;
+    }
+    
+    .main {
+        padding-bottom: 80px !important;
     }
     
     /* ========== VERSÃO MOBILE ========== */
     @media only screen and (max-width: 768px) {
-        /* Mostrar botão de menu */
-        .mobile-menu-button {
-            display: block;
-        }
-        
-        /* Esconder sidebar por padrão no mobile */
-        section[data-testid="stSidebar"] {
-            display: none !important;
-        }
-        
-        /* Quando sidebar estiver visível */
-        body.sidebar-visible section[data-testid="stSidebar"] {
-            display: block !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 80% !important;
-            max-width: 300px !important;
-            height: 100vh !important;
-            z-index: 99998 !important;
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%) !important;
-            animation: slideIn 0.3s ease;
-        }
-        
-        /* Overlay visível quando sidebar aberta */
-        body.sidebar-visible .sidebar-overlay {
-            display: block;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(-100%);
-            }
-            to {
-                transform: translateX(0);
-            }
-        }
-        
-        /* Ajustar conteúdo principal */
-        .main .block-container {
-            padding-top: 70px !important;
-        }
-        
         /* Ajustar títulos */
         .section-title {
             font-size: 1.5rem;
@@ -323,16 +327,6 @@ st.markdown("""
             width: 100% !important;
             min-width: 100% !important;
             padding: 5px 0 !important;
-        }
-        
-        /* Ajustar tabs */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 5px !important;
-        }
-        
-        .stTabs [data-baseweb="tab"] {
-            padding: 5px 10px !important;
-            font-size: 0.8rem !important;
         }
         
         /* Ajustar selectboxes */
@@ -422,27 +416,6 @@ st.markdown("""
         }
     }
 </style>
-<!-- Botão de menu mobile - ISSO FICA AQUI! -->
-<button class="mobile-menu-button" onclick="toggleSidebar()" id="mobileMenuBtn">☰</button>
-<div class="sidebar-overlay" onclick="toggleSidebar()" id="sidebarOverlay"></div>
-
-<script>
-function toggleSidebar() {
-    document.body.classList.toggle('sidebar-visible');
-}
-
-// Fechar sidebar ao clicar em um link
-document.addEventListener('DOMContentLoaded', function() {
-    const menuItems = document.querySelectorAll('[data-testid="stSidebar"] a, [data-testid="stSidebar"] button');
-    menuItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                document.body.classList.remove('sidebar-visible');
-            }
-        });
-    });
-});
-</script>
 """, unsafe_allow_html=True)
 
 # -------- SESSION --------
@@ -491,86 +464,81 @@ with st.sidebar:
 st.markdown("<h1 class='section-title'>🎰 Mega-Sena Analyst PRO</h1>", unsafe_allow_html=True)
 
 # ----------------------------------------------------
+# DETECTAR MOBILE PARA AJUSTES DE LAYOUT
+# ----------------------------------------------------
+is_mobile = st.session_state.get('is_mobile', False)
+if 'is_mobile' not in st.session_state:
+    # Detecção simples - será atualizada por JavaScript se necessário
+    st.session_state.is_mobile = False
+
+# ----------------------------------------------------
 # DOWNLOAD RESULTADOS
 # ----------------------------------------------------
 if menu == "📥 Download Resultados":
     
-    # No mobile, muda o layout
-    if st.session_state.get('mobile', False):
-        col1, col2 = st.columns(1)
-        with col1:
-            st.markdown("### 📥 Download de Resultados")
-            st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena direto da API oficial da Caixa")
-            
-            if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
-                with st.spinner("📥 Baixando dados históricos (isso pode levar alguns minutos)..."):
-                    ok = analyzer.fetch_all_results(force_download=True)
-                    
-                    if ok:
-                        st.session_state.stats = analyzer.comprehensive_analysis()
-                        st.session_state.last_update = datetime.now().strftime("%d/%m/%Y %H:%M")
-                        
-                        latest = analyzer.get_latest_result()
-                        if latest:
-                            st.session_state.last_result = latest
-                        
-                        st.success(f"""
-                        ✅ Download concluído!
-                        - 📊 {analyzer.stats['total_games']} concursos analisados
-                        - 📅 Atualizado em: {st.session_state.last_update}
-                        """)
-                    else:
-                        st.error("❌ Erro ao baixar dados. Verifique sua conexão.")
+    # Layout responsivo
+    if is_mobile:
+        st.markdown("### 📥 Download de Resultados")
+        st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena")
         
-        with col2:
-            if st.session_state.last_result:
-                st.markdown("### 🎯 Último Resultado")
-                concurso = st.session_state.last_result.get('concurso', '')
-                data = st.session_state.last_result.get('data', '')
-                numeros = st.session_state.last_result.get('numeros', [])
-                acumulado = st.session_state.last_result.get('acumulado', False)
-                premio = st.session_state.last_result.get('estimativa', 0)
+        if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
+            with st.spinner("📥 Baixando dados históricos..."):
+                ok = analyzer.fetch_all_results(force_download=True)
                 
-                st.markdown(f"""
-                <div class="result-card">
-                    <h3>Concurso {concurso}</h3>
-                    <p>{data}</p>
-                    <div class="numbers-container">
-                """, unsafe_allow_html=True)
-                
-                cols = st.columns(6)
-                for i, num in enumerate(numeros):
-                    with cols[i]:
-                        st.markdown(f"<div class='number-square'>{num:02d}</div>", unsafe_allow_html=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                if acumulado:
-                    st.markdown("""
-                    <p style='color: #ff6b6b; font-weight: bold; margin-top: 10px;'>
-                        ⚠️ ACUMULOU!
-                    </p>
-                    """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                    <p style='margin-top: 10px;'>
-                        <span class='info-tag'>💰 Prêmio: R$ {premio:,.2f}</span>
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                with st.expander("📊 Detalhes do concurso"):
-                    st.markdown(f"""
-                    - **Ganhadores (6 acertos):** {st.session_state.last_result.get('ganhadores_6', 0)}
-                    - **Ganhadores (5 acertos):** {st.session_state.last_result.get('ganhadores_5', 0)}
-                    - **Ganhadores (4 acertos):** {st.session_state.last_result.get('ganhadores_4', 0)}
-                    - **Local:** {st.session_state.last_result.get('local', '')}
-                    - **Próximo concurso:** {st.session_state.last_result.get('data_proximo', '')}
+                if ok:
+                    st.session_state.stats = analyzer.comprehensive_analysis()
+                    st.session_state.last_update = datetime.now().strftime("%d/%m/%Y %H:%M")
+                    
+                    latest = analyzer.get_latest_result()
+                    if latest:
+                        st.session_state.last_result = latest
+                    
+                    st.success(f"""
+                    ✅ Download concluído!
+                    - 📊 {analyzer.stats['total_games']} concursos analisados
+                    - 📅 Atualizado em: {st.session_state.last_update}
                     """)
-            else:
-                st.info("📅 Faça o download para ver o último resultado")
+                else:
+                    st.error("❌ Erro ao baixar dados. Verifique sua conexão.")
+        
+        if st.session_state.last_result:
+            st.markdown("### 🎯 Último Resultado")
+            concurso = st.session_state.last_result.get('concurso', '')
+            data = st.session_state.last_result.get('data', '')
+            numeros = st.session_state.last_result.get('numeros', [])
+            acumulado = st.session_state.last_result.get('acumulado', False)
+            premio = st.session_state.last_result.get('estimativa', 0)
+            
+            st.markdown(f"""
+            <div class="result-card">
+                <h3>Concurso {concurso}</h3>
+                <p>{data}</p>
+                <div class="numbers-container">
+            """, unsafe_allow_html=True)
+            
+            cols = st.columns(6)
+            for i, num in enumerate(numeros):
+                with cols[i]:
+                    st.markdown(f"<div class='number-square'>{num:02d}</div>", unsafe_allow_html=True)
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            if acumulado:
+                st.markdown("""
+                <p style='color: #ff6b6b; font-weight: bold; margin-top: 10px;'>
+                    ⚠️ ACUMULOU!
+                </p>
+                """, unsafe_allow_html=True)
+            
+            with st.expander("📊 Detalhes do concurso"):
+                st.markdown(f"""
+                - **Ganhadores (6 acertos):** {st.session_state.last_result.get('ganhadores_6', 0)}
+                - **Ganhadores (5 acertos):** {st.session_state.last_result.get('ganhadores_5', 0)}
+                - **Ganhadores (4 acertos):** {st.session_state.last_result.get('ganhadores_4', 0)}
+                - **Local:** {st.session_state.last_result.get('local', '')}
+                - **Próximo concurso:** {st.session_state.last_result.get('data_proximo', '')}
+                """)
     else:
-        # Versão desktop (original)
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -578,7 +546,7 @@ if menu == "📥 Download Resultados":
             st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena direto da API oficial da Caixa")
             
             if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
-                with st.spinner("📥 Baixando dados históricos (isso pode levar alguns minutos)..."):
+                with st.spinner("📥 Baixando dados históricos..."):
                     ok = analyzer.fetch_all_results(force_download=True)
                     
                     if ok:
@@ -627,13 +595,6 @@ if menu == "📥 Download Resultados":
                         ⚠️ ACUMULOU!
                     </p>
                     """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                    <p style='margin-top: 10px;'>
-                        <span class='info-tag'>💰 Prêmio: R$ {premio:,.2f}</span>
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
                 
                 with st.expander("📊 Detalhes do concurso"):
                     st.markdown(f"""
@@ -662,8 +623,8 @@ elif menu == "📊 Análise Estatística":
             columns=["Número", "Frequência"]
         )
         
-        # No mobile, muda para 2 colunas em vez de 4
-        if st.session_state.get('mobile', False):
+        # Layout responsivo para métricas
+        if is_mobile:
             col1, col2 = st.columns(2)
             
             with col1:
@@ -678,15 +639,16 @@ elif menu == "📊 Análise Estatística":
                 <div class="metric-card">
                     <h3>Nº Mais Sorteado</h3>
                     <div class="value">{freq.most_common(1)[0][0]:02d}</div>
-                    <div>{freq.most_common(1)[0][1]} vezes</div>
+                    <div>{freq.most_common(1)[0][1]}x</div>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
+                media = sum(freq.values()) / 60
                 st.markdown(f"""
                 <div class="metric-card">
                     <h3>Média por Nº</h3>
-                    <div class="value">{sum(freq.values())/60:.1f}</div>
+                    <div class="value">{media:.1f}</div>
                 </div>
                 """, unsafe_allow_html=True)
                 
@@ -694,11 +656,10 @@ elif menu == "📊 Análise Estatística":
                 <div class="metric-card">
                     <h3>Nº Menos Sorteado</h3>
                     <div class="value">{freq.most_common()[-1][0]:02d}</div>
-                    <div>{freq.most_common()[-1][1]} vezes</div>
+                    <div>{freq.most_common()[-1][1]}x</div>
                 </div>
                 """, unsafe_allow_html=True)
         else:
-            # Versão desktop com 4 colunas
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
@@ -766,8 +727,8 @@ elif menu == "📊 Análise Estatística":
         fig.update_layout(height=500)
         st.plotly_chart(fig, use_container_width=True)
         
-        # Top e Flop - No mobile, um abaixo do outro
-        if st.session_state.get('mobile', False):
+        # Top e Flop - responsivo
+        if is_mobile:
             st.markdown("### 🔥 Top 15 Números Mais Sorteados")
             top15 = df_freq.nlargest(15, 'Frequência').reset_index(drop=True)
             top15.index = range(1, 16)
@@ -863,8 +824,8 @@ elif menu == "🎰 Gerador de Jogos":
         
         st.markdown("### ⚙️ Configuração do Gerador")
         
-        # No mobile, colunas empilhadas
-        if st.session_state.get('mobile', False):
+        # Layout responsivo para configurações
+        if is_mobile:
             estrategia = st.selectbox(
                 "🎯 Estratégia",
                 [
@@ -971,8 +932,8 @@ elif menu == "🎰 Gerador de Jogos":
             for i, grupo in enumerate(resultados):
                 st.markdown(f"### 📦 Conjunto {i+1}")
                 
-                # No mobile, 2 colunas em vez de 3
-                if st.session_state.get('mobile', False):
+                # Responsivo: mobile 2 colunas, desktop 3 colunas
+                if is_mobile:
                     cols = st.columns(2)
                 else:
                     cols = st.columns(3)
@@ -1008,84 +969,6 @@ elif menu == "🎰 Gerador de Jogos":
 # BANNER DE DOAÇÃO
 # ----------------------------------------------------
 st.markdown("""
-<style>
-    .donation-banner {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 15px 20px;
-        text-align: center;
-        color: white;
-        box-shadow: 0 -10px 30px rgba(102, 126, 234, 0.5);
-        z-index: 999;
-        border-top: 3px solid rgba(255, 255, 255, 0.3);
-        animation: slideUp 0.5s ease;
-        font-family: 'Arial', sans-serif;
-    }
-    
-    @keyframes slideUp {
-        from {
-            transform: translateY(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
-    
-    .banner-content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 20px;
-        flex-wrap: wrap;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-    
-    .pix-card {
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        padding: 10px 20px;
-        border-radius: 50px;
-        border: 2px solid rgba(255, 255, 255, 0.5);
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        font-size: 1.1rem;
-        font-weight: bold;
-        transition: all 0.3s ease;
-    }
-    
-    .pix-card:hover {
-        transform: scale(1.05);
-        background: rgba(255, 255, 255, 0.3);
-    }
-    
-    .copy-button {
-        background: white;
-        color: #667eea;
-        border: none;
-        padding: 5px 15px;
-        border-radius: 25px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .copy-button:hover {
-        transform: scale(1.1);
-        background: #f0f0f0;
-    }
-    
-    .main {
-        padding-bottom: 80px !important;
-    }
-</style>
-
 <div class="donation-banner">
     <div class="banner-content">
         <span style="font-size: 1.5rem;">💚</span>
@@ -1108,6 +991,23 @@ function copyPIX() {
         alert('✅ PIX copiado! Obrigado por apoiar o projeto!');
     });
 }
+
+// Detectar mobile
+if (window.innerWidth <= 768) {
+    // Criar um elemento invisível para comunicar com Streamlit
+    const mobileDetect = document.createElement('div');
+    mobileDetect.id = 'mobile-detected';
+    mobileDetect.style.display = 'none';
+    document.body.appendChild(mobileDetect);
+    
+    // Atualizar o estado no Streamlit (via session state)
+    setTimeout(function() {
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: true
+        }, '*');
+    }, 100);
+}
 </script>
 """, unsafe_allow_html=True)
 
@@ -1117,3 +1017,30 @@ st.markdown("""
     <p style='font-size: 0.8rem;'>© 2024 Mega-Sena Analyst PRO - v2.0 | Dados oficiais da Caixa Econômica Federal</p>
 </div>
 """, unsafe_allow_html=True)
+
+# Detecção mobile via JavaScript (simples)
+st.markdown("""
+<script>
+if (window.innerWidth <= 768) {
+    window.parent.postMessage({
+        type: 'streamlit:setComponentValue',
+        value: true
+    }, '*');
+}
+</script>
+""", unsafe_allow_html=True)
+
+# Atualizar is_mobile baseado na largura da tela
+st.markdown("""
+<style>
+    /* Isso é apenas para forçar uma atualização */
+</style>
+""", unsafe_allow_html=True)
+
+# Verificar se é mobile baseado na largura da tela
+# Nota: Isso é uma simplificação - em produção, use JavaScript para detecção precisa
+if 'mobile' not in st.session_state:
+    st.session_state.mobile = False
+    # Você pode adicionar um parâmetro na URL para testes
+    if st.query_params.get('mobile', ['false'])[0] == 'true':
+        st.session_state.mobile = True
