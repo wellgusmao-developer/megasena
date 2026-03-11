@@ -20,7 +20,7 @@ st.set_page_config(
     }
 )
 
-# -------- CSS MODERNO COM VERSÃO MOBILE --------
+# -------- CSS MODERNO --------
 st.markdown("""
 <style>
     /* Remover elementos padrão do Streamlit */
@@ -49,7 +49,6 @@ st.markdown("""
         box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         color: white;
         transition: transform 0.3s ease;
-        margin-bottom: 15px;
     }
     
     .metric-card:hover {
@@ -133,7 +132,7 @@ st.markdown("""
     }
     
     /* Sidebar */
-    section[data-testid="stSidebar"] {
+    .css-1d391kg {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
     }
     
@@ -152,7 +151,6 @@ st.markdown("""
         padding: 20px;
         box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         text-align: center;
-        margin-bottom: 15px;
     }
     
     .info-tag {
@@ -164,8 +162,410 @@ st.markdown("""
         display: inline-block;
         margin: 5px;
     }
+</style>
+""", unsafe_allow_html=True)
+
+# -------- SESSION --------
+if "analyzer" not in st.session_state:
+    st.session_state.analyzer = MegaSenaDeepAnalyzer()
+
+if "stats" not in st.session_state:
+    st.session_state.stats = None
+
+if "last_update" not in st.session_state:
+    st.session_state.last_update = None
+
+if "last_result" not in st.session_state:
+    st.session_state.last_result = None
+
+analyzer = st.session_state.analyzer
+
+# -------- SIDEBAR --------
+with st.sidebar:
+    st.markdown("<h2 class='sidebar-title'>🎰 Mega-Sena<br>Analyst PRO</h2>", unsafe_allow_html=True)
     
-    /* Banner de doação */
+    st.markdown("---")
+    
+    menu = st.radio(
+        "📌 Menu",
+        [
+            "📥 Download Resultados",
+            "📊 Análise Estatística",
+            "🎰 Gerador de Jogos"
+        ],
+        label_visibility="collapsed",
+        key="menu_principal"
+    )
+    
+    if st.session_state.stats:
+        st.markdown("---")
+        st.metric("📊 Concursos", st.session_state.stats['total_games'])
+        
+        if st.session_state.last_update:
+            st.caption(f"🕐 Atualizado: {st.session_state.last_update}")
+    
+    st.markdown("---")
+    st.caption("v2.0 - Dados Oficiais Caixa")
+
+# -------- CONTEÚDO PRINCIPAL --------
+st.markdown("<h1 class='section-title'>🎰 Mega-Sena Analyst PRO</h1>", unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# DOWNLOAD RESULTADOS
+# ----------------------------------------------------
+if menu == "📥 Download Resultados":
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.markdown("### 📥 Download de Resultados")
+        st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena direto da API oficial da Caixa")
+        
+        if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
+            with st.spinner("📥 Baixando dados históricos (isso pode levar alguns minutos)..."):
+                ok = analyzer.fetch_all_results(force_download=True)
+                
+                if ok:
+                    st.session_state.stats = analyzer.comprehensive_analysis()
+                    st.session_state.last_update = datetime.now().strftime("%d/%m/%Y %H:%M")
+                    
+                    # Buscar último resultado formatado
+                    latest = analyzer.get_latest_result()
+                    if latest:
+                        st.session_state.last_result = latest
+                    
+                    st.success(f"""
+                    ✅ Download concluído!
+                    - 📊 {analyzer.stats['total_games']} concursos analisados
+                    - 📅 Atualizado em: {st.session_state.last_update}
+                    """)
+                else:
+                    st.error("❌ Erro ao baixar dados. Verifique sua conexão.")
+    
+    with col2:
+        # Mostrar último resultado se disponível
+        if st.session_state.last_result:
+            st.markdown("### 🎯 Último Resultado")
+            
+            # Extrair dados
+            concurso = st.session_state.last_result.get('concurso', '')
+            data = st.session_state.last_result.get('data', '')
+            numeros = st.session_state.last_result.get('numeros', [])
+            acumulado = st.session_state.last_result.get('acumulado', False)
+            premio = st.session_state.last_result.get('estimativa', 0)
+            
+            # Card do resultado
+            st.markdown(f"""
+            <div class="result-card">
+                <h3>Concurso {concurso}</h3>
+                <p>{data}</p>
+                <div class="numbers-container">
+            """, unsafe_allow_html=True)
+            
+            # Mostrar números
+            cols = st.columns(6)
+            for i, num in enumerate(numeros):
+                with cols[i]:
+                    st.markdown(f"<div class='number-square'>{num:02d}</div>", unsafe_allow_html=True)
+            
+            # Informações adicionais
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            if acumulado:
+                st.markdown("""
+                <p style='color: #ff6b6b; font-weight: bold; margin-top: 10px;'>
+                    ⚠️ ACUMULOU!
+                </p>
+                """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+                <p style='margin-top: 10px;'>
+                    <span class='info-tag'>💰 Prêmio: R$ {premio:,.2f}</span>
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Detalhes dos ganhadores
+            with st.expander("📊 Detalhes do concurso"):
+                st.markdown(f"""
+                - **Ganhadores (6 acertos):** {st.session_state.last_result.get('ganhadores_6', 0)}
+                - **Ganhadores (5 acertos):** {st.session_state.last_result.get('ganhadores_5', 0)}
+                - **Ganhadores (4 acertos):** {st.session_state.last_result.get('ganhadores_4', 0)}
+                - **Local:** {st.session_state.last_result.get('local', '')}
+                - **Próximo concurso:** {st.session_state.last_result.get('data_proximo', '')}
+                """)
+        else:
+            st.info("📅 Faça o download para ver o último resultado")
+
+# ----------------------------------------------------
+# ANÁLISE ESTATÍSTICA
+# ----------------------------------------------------
+elif menu == "📊 Análise Estatística":
+    
+    if not st.session_state.stats:
+        st.warning("⚠️ Faça o download dos resultados primeiro no menu 'Download Resultados'")
+    else:
+        stats = st.session_state.stats
+        freq = stats["frequencies"]
+        
+        df_freq = pd.DataFrame(
+            [(n, freq[n]) for n in range(1, 61)],
+            columns=["Número", "Frequência"]
+        )
+        
+        # Métricas
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>Total de Concursos</h3>
+                <div class="value">{stats['total_games']}</div>
+                <div>histórico completo</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            most_common = freq.most_common(1)[0]
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>Nº Mais Sorteado</h3>
+                <div class="value">{most_common[0]:02d}</div>
+                <div>{most_common[1]} vezes</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            least_common = freq.most_common()[-1]
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>Nº Menos Sorteado</h3>
+                <div class="value">{least_common[0]:02d}</div>
+                <div>{least_common[1]} vezes</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            media = sum(freq.values()) / 60
+            st.markdown(f"""
+            <div class="metric-card">
+                <h3>Média por Nº</h3>
+                <div class="value">{media:.1f}</div>
+                <div>aparições</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Gráfico de frequência
+        st.markdown("### 📈 Distribuição de Frequência")
+        
+        fig = px.bar(
+            df_freq,
+            x="Número",
+            y="Frequência",
+            color="Frequência",
+            color_continuous_scale=['#667eea', '#764ba2'],
+            text="Frequência"
+        )
+        
+        fig.add_hline(
+            y=media,
+            line_dash="dash",
+            line_color="red",
+            annotation_text=f"Média: {media:.1f}"
+        )
+        
+        fig.update_traces(textposition='outside')
+        fig.update_layout(height=500)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Top e Flop
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("### 🔥 Top 15 Números Mais Sorteados")
+            top15 = df_freq.nlargest(15, 'Frequência').reset_index(drop=True)
+            top15.index = range(1, 16)
+            st.dataframe(
+                top15,
+                use_container_width=True,
+                hide_index=False,
+                column_config={
+                    "Número": "Nº",
+                    "Frequência": "Vezes"
+                }
+            )
+        
+        with col2:
+            st.markdown("### ❄️ Top 15 Números Menos Sorteados")
+            bottom15 = df_freq.nsmallest(15, 'Frequência').reset_index(drop=True)
+            bottom15.index = range(1, 16)
+            st.dataframe(
+                bottom15,
+                use_container_width=True,
+                hide_index=False,
+                column_config={
+                    "Número": "Nº",
+                    "Frequência": "Vezes"
+                }
+            )
+        
+        st.markdown("---")
+        
+        # Pares mais frequentes
+        st.markdown("### 🤝 Top 20 Pares Mais Frequentes")
+        
+        pairs = stats["pairs"].most_common(20)
+        df_pairs = pd.DataFrame(
+            [(f"{p[0]:02d} - {p[1]:02d}", c) for p, c in pairs],
+            columns=["Par", "Frequência"]
+        )
+        df_pairs.index = range(1, 21)
+        
+        st.dataframe(
+            df_pairs,
+            use_container_width=True,
+            hide_index=False,
+            column_config={
+                "Par": "Combinação",
+                "Frequência": "Ocorrências"
+            }
+        )
+
+# ----------------------------------------------------
+# GERADOR DE JOGOS
+# ----------------------------------------------------
+elif menu == "🎰 Gerador de Jogos":
+    
+    if not st.session_state.stats:
+        st.warning("⚠️ Faça o download dos resultados primeiro no menu 'Download Resultados'")
+    else:
+        stats = st.session_state.stats
+        freq = stats["frequencies"]
+        
+        all_freq = freq.most_common()
+        hot = [n for n, _ in all_freq[:20]]
+        cold = [n for n, _ in all_freq[-20:]]
+        
+        st.markdown("### ⚙️ Configuração do Gerador")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            estrategia = st.selectbox(
+                "🎯 Estratégia",
+                [
+                    "Aleatório",
+                    "Números Quentes",
+                    "Números Frios",
+                    "Mistura Quente/Frio (3/3)",
+                    "Par/Ímpar Balanceado"
+                ],
+                key="select_estrategia"
+            )
+        
+        with col2:
+            conjuntos = st.number_input(
+                "📦 Conjuntos", 
+                1, 10, 2,
+                key="num_conjuntos"
+            )
+        
+        with col3:
+            jogos = st.number_input(
+                "🎲 Jogos por conjunto", 
+                1, 20, 6,
+                key="num_jogos"
+            )
+        
+        # Mostrar números em destaque
+        st.markdown("### 🔥 Números em Destaque")
+        
+        col_hot, col_cold = st.columns(2)
+        
+        with col_hot:
+            st.markdown("**Números Quentes (mais frequentes):**")
+            hot_html = ""
+            for n in sorted(hot[:15]):
+                hot_html += f"<span class='number-square number-hot'>{n:02d}</span>"
+            st.markdown(f"<div class='numbers-container'>{hot_html}</div>", unsafe_allow_html=True)
+        
+        with col_cold:
+            st.markdown("**Números Frios (menos frequentes):**")
+            cold_html = ""
+            for n in sorted(cold[:15]):
+                cold_html += f"<span class='number-square number-cold'>{n:02d}</span>"
+            st.markdown(f"<div class='numbers-container'>{cold_html}</div>", unsafe_allow_html=True)
+        
+        if st.button("🎰 Gerar Jogos", use_container_width=True, key="btn_gerar"):
+            
+            resultados = []
+            
+            for c in range(conjuntos):
+                grupo = []
+                
+                for _ in range(jogos):
+                    if estrategia == "Aleatório":
+                        game = sorted(random.sample(range(1,61), 6))
+                    
+                    elif estrategia == "Números Quentes":
+                        game = sorted(random.sample(hot, 6))
+                    
+                    elif estrategia == "Números Frios":
+                        game = sorted(random.sample(cold, 6))
+                    
+                    elif estrategia == "Mistura Quente/Frio (3/3)":
+                        game = sorted(random.sample(hot, 3) + random.sample(cold, 3))
+                    
+                    elif estrategia == "Par/Ímpar Balanceado":
+                        pares = [n for n in range(1,61) if n%2==0]
+                        impares = [n for n in range(1,61) if n%2==1]
+                        game = sorted(random.sample(pares, 3) + random.sample(impares, 3))
+                    
+                    grupo.append(game)
+                
+                resultados.append(grupo)
+            
+            st.markdown("---")
+            
+            for i, grupo in enumerate(resultados):
+                st.markdown(f"### 📦 Conjunto {i+1}")
+                
+                cols = st.columns(3)
+                
+                for idx, jogo in enumerate(grupo):
+                    with cols[idx % 3]:
+                        st.markdown(f"**Jogo {idx+1}**")
+                        
+                        num_html = ""
+                        for num in jogo:
+                            if num in hot:
+                                num_html += f"<span class='number-square number-hot'>{num:02d}</span>"
+                            elif num in cold:
+                                num_html += f"<span class='number-square number-cold'>{num:02d}</span>"
+                            else:
+                                num_html += f"<span class='number-square'>{num:02d}</span>"
+                        
+                        st.markdown(f"<div class='numbers-container'>{num_html}</div>", unsafe_allow_html=True)
+                
+                st.markdown("---")
+                
+                df = pd.DataFrame(grupo, columns=[f"N{i+1}" for i in range(6)])
+                csv = df.to_csv(index=False)
+                st.download_button(
+                    label=f"📥 Download Conjunto {i+1} (CSV)",
+                    data=csv,
+                    file_name=f"megasena_conjunto_{i+1}.csv",
+                    mime="text/csv",
+                    key=f"download_conjunto_{i}"
+                )
+
+# ----------------------------------------------------
+# BANNER DE DOAÇÃO
+# ----------------------------------------------------
+st.markdown("""
+<style>
     .donation-banner {
         position: fixed;
         bottom: 0;
@@ -241,734 +641,8 @@ st.markdown("""
     .main {
         padding-bottom: 80px !important;
     }
-    
-    /* ========== VERSÃO MOBILE ========== */
-    @media only screen and (max-width: 768px) {
-        /* Ajustar títulos */
-        .section-title {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-        }
-        
-        /* Ajustar cards de métrica */
-        .metric-card {
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-        
-        .metric-card .value {
-            font-size: 1.8rem;
-        }
-        
-        .metric-card h3 {
-            font-size: 0.9rem;
-        }
-        
-        /* Ajustar números quadrados */
-        .number-square {
-            width: 45px;
-            height: 45px;
-            font-size: 1.1rem;
-            line-height: 45px;
-            margin: 3px;
-        }
-        
-        /* Ajustar container de números */
-        .numbers-container {
-            gap: 5px;
-            margin: 10px 0;
-        }
-        
-        /* Ajustar botões */
-        .stButton > button {
-            padding: 8px 15px;
-            font-size: 0.9rem;
-        }
-        
-        /* Ajustar dataframes */
-        .stDataFrame {
-            font-size: 0.8rem;
-        }
-        
-        /* Ajustar expanders */
-        .streamlit-expanderHeader {
-            font-size: 0.9rem !important;
-        }
-        
-        /* Ajustar banners de doação */
-        .donation-banner {
-            padding: 10px !important;
-        }
-        
-        .banner-content {
-            flex-direction: column !important;
-            gap: 10px !important;
-        }
-        
-        .pix-card {
-            padding: 8px 12px !important;
-            font-size: 0.9rem !important;
-            flex-wrap: wrap !important;
-            justify-content: center !important;
-        }
-        
-        .copy-button {
-            padding: 3px 10px !important;
-            font-size: 0.8rem !important;
-        }
-        
-        /* Ajustar gráficos */
-        .js-plotly-plot {
-            height: 350px !important;
-        }
-        
-        /* Ajustar métricas em linha */
-        div[data-testid="column"] {
-            width: 100% !important;
-            min-width: 100% !important;
-            padding: 5px 0 !important;
-        }
-        
-        /* Ajustar selectboxes */
-        .stSelectbox {
-            margin-bottom: 10px !important;
-        }
-        
-        /* Ajustar number inputs */
-        .stNumberInput {
-            margin-bottom: 10px !important;
-        }
-        
-        /* Melhorar espaçamento */
-        .block-container {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-        }
-        
-        /* Ajustar badges */
-        .info-tag {
-            font-size: 0.7rem !important;
-            padding: 3px 8px !important;
-        }
-    }
-    
-    /* Ajustes para telas muito pequenas */
-    @media only screen and (max-width: 480px) {
-        .section-title {
-            font-size: 1.2rem;
-        }
-        
-        .metric-card .value {
-            font-size: 1.5rem;
-        }
-        
-        .number-square {
-            width: 35px;
-            height: 35px;
-            font-size: 0.9rem;
-            line-height: 35px;
-        }
-        
-        .result-card h3 {
-            font-size: 1rem;
-        }
-        
-        .result-card p {
-            font-size: 0.8rem;
-        }
-    }
-    
-    /* Ajustes para tablets */
-    @media only screen and (min-width: 769px) and (max-width: 1024px) {
-        .number-square {
-            width: 50px;
-            height: 50px;
-            font-size: 1.2rem;
-            line-height: 50px;
-        }
-        
-        .metric-card .value {
-            font-size: 2rem;
-        }
-        
-        .banner-content {
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-    }
-    
-    /* Melhorias de touch para mobile */
-    @media (hover: none) and (pointer: coarse) {
-        .stButton > button {
-            min-height: 44px;
-        }
-        
-        .copy-button {
-            min-height: 36px;
-        }
-        
-        .stSelectbox > div {
-            min-height: 44px;
-        }
-        
-        .stNumberInput input {
-            min-height: 44px;
-        }
-    }
 </style>
-""", unsafe_allow_html=True)
 
-# -------- SESSION --------
-if "analyzer" not in st.session_state:
-    st.session_state.analyzer = MegaSenaDeepAnalyzer()
-
-if "stats" not in st.session_state:
-    st.session_state.stats = None
-
-if "last_update" not in st.session_state:
-    st.session_state.last_update = None
-
-if "last_result" not in st.session_state:
-    st.session_state.last_result = None
-
-analyzer = st.session_state.analyzer
-
-# -------- SIDEBAR --------
-with st.sidebar:
-    st.markdown("<h2 class='sidebar-title'>🎰 Mega-Sena<br>Analyst PRO</h2>", unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    menu = st.radio(
-        "📌 Menu",
-        [
-            "📥 Download Resultados",
-            "📊 Análise Estatística",
-            "🎰 Gerador de Jogos"
-        ],
-        label_visibility="collapsed",
-        key="menu_principal"
-    )
-    
-    if st.session_state.stats:
-        st.markdown("---")
-        st.metric("📊 Concursos", st.session_state.stats['total_games'])
-        
-        if st.session_state.last_update:
-            st.caption(f"🕐 Atualizado: {st.session_state.last_update}")
-    
-    st.markdown("---")
-    st.caption("v2.0 - Dados Oficiais Caixa")
-
-# -------- CONTEÚDO PRINCIPAL --------
-st.markdown("<h1 class='section-title'>🎰 Mega-Sena Analyst PRO</h1>", unsafe_allow_html=True)
-
-# ----------------------------------------------------
-# DETECTAR MOBILE PARA AJUSTES DE LAYOUT
-# ----------------------------------------------------
-is_mobile = st.session_state.get('is_mobile', False)
-if 'is_mobile' not in st.session_state:
-    # Detecção simples - será atualizada por JavaScript se necessário
-    st.session_state.is_mobile = False
-
-# ----------------------------------------------------
-# DOWNLOAD RESULTADOS
-# ----------------------------------------------------
-if menu == "📥 Download Resultados":
-    
-    # Layout responsivo
-    if is_mobile:
-        st.markdown("### 📥 Download de Resultados")
-        st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena")
-        
-        if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
-            with st.spinner("📥 Baixando dados históricos..."):
-                ok = analyzer.fetch_all_results(force_download=True)
-                
-                if ok:
-                    st.session_state.stats = analyzer.comprehensive_analysis()
-                    st.session_state.last_update = datetime.now().strftime("%d/%m/%Y %H:%M")
-                    
-                    latest = analyzer.get_latest_result()
-                    if latest:
-                        st.session_state.last_result = latest
-                    
-                    st.success(f"""
-                    ✅ Download concluído!
-                    - 📊 {analyzer.stats['total_games']} concursos analisados
-                    - 📅 Atualizado em: {st.session_state.last_update}
-                    """)
-                else:
-                    st.error("❌ Erro ao baixar dados. Verifique sua conexão.")
-        
-        if st.session_state.last_result:
-            st.markdown("### 🎯 Último Resultado")
-            concurso = st.session_state.last_result.get('concurso', '')
-            data = st.session_state.last_result.get('data', '')
-            numeros = st.session_state.last_result.get('numeros', [])
-            acumulado = st.session_state.last_result.get('acumulado', False)
-            premio = st.session_state.last_result.get('estimativa', 0)
-            
-            st.markdown(f"""
-            <div class="result-card">
-                <h3>Concurso {concurso}</h3>
-                <p>{data}</p>
-                <div class="numbers-container">
-            """, unsafe_allow_html=True)
-            
-            cols = st.columns(6)
-            for i, num in enumerate(numeros):
-                with cols[i]:
-                    st.markdown(f"<div class='number-square'>{num:02d}</div>", unsafe_allow_html=True)
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            if acumulado:
-                st.markdown("""
-                <p style='color: #ff6b6b; font-weight: bold; margin-top: 10px;'>
-                    ⚠️ ACUMULOU!
-                </p>
-                """, unsafe_allow_html=True)
-            
-            with st.expander("📊 Detalhes do concurso"):
-                st.markdown(f"""
-                - **Ganhadores (6 acertos):** {st.session_state.last_result.get('ganhadores_6', 0)}
-                - **Ganhadores (5 acertos):** {st.session_state.last_result.get('ganhadores_5', 0)}
-                - **Ganhadores (4 acertos):** {st.session_state.last_result.get('ganhadores_4', 0)}
-                - **Local:** {st.session_state.last_result.get('local', '')}
-                - **Próximo concurso:** {st.session_state.last_result.get('data_proximo', '')}
-                """)
-    else:
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.markdown("### 📥 Download de Resultados")
-            st.info("Clique no botão abaixo para baixar TODOS os resultados da Mega-Sena direto da API oficial da Caixa")
-            
-            if st.button("🚀 Baixar TODOS os Resultados", use_container_width=True, key="btn_download"):
-                with st.spinner("📥 Baixando dados históricos..."):
-                    ok = analyzer.fetch_all_results(force_download=True)
-                    
-                    if ok:
-                        st.session_state.stats = analyzer.comprehensive_analysis()
-                        st.session_state.last_update = datetime.now().strftime("%d/%m/%Y %H:%M")
-                        
-                        latest = analyzer.get_latest_result()
-                        if latest:
-                            st.session_state.last_result = latest
-                        
-                        st.success(f"""
-                        ✅ Download concluído!
-                        - 📊 {analyzer.stats['total_games']} concursos analisados
-                        - 📅 Atualizado em: {st.session_state.last_update}
-                        """)
-                    else:
-                        st.error("❌ Erro ao baixar dados. Verifique sua conexão.")
-        
-        with col2:
-            if st.session_state.last_result:
-                st.markdown("### 🎯 Último Resultado")
-                
-                concurso = st.session_state.last_result.get('concurso', '')
-                data = st.session_state.last_result.get('data', '')
-                numeros = st.session_state.last_result.get('numeros', [])
-                acumulado = st.session_state.last_result.get('acumulado', False)
-                premio = st.session_state.last_result.get('estimativa', 0)
-                
-                st.markdown(f"""
-                <div class="result-card">
-                    <h3>Concurso {concurso}</h3>
-                    <p>{data}</p>
-                    <div class="numbers-container">
-                """, unsafe_allow_html=True)
-                
-                cols = st.columns(6)
-                for i, num in enumerate(numeros):
-                    with cols[i]:
-                        st.markdown(f"<div class='number-square'>{num:02d}</div>", unsafe_allow_html=True)
-                
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-                if acumulado:
-                    st.markdown("""
-                    <p style='color: #ff6b6b; font-weight: bold; margin-top: 10px;'>
-                        ⚠️ ACUMULOU!
-                    </p>
-                    """, unsafe_allow_html=True)
-                
-                with st.expander("📊 Detalhes do concurso"):
-                    st.markdown(f"""
-                    - **Ganhadores (6 acertos):** {st.session_state.last_result.get('ganhadores_6', 0)}
-                    - **Ganhadores (5 acertos):** {st.session_state.last_result.get('ganhadores_5', 0)}
-                    - **Ganhadores (4 acertos):** {st.session_state.last_result.get('ganhadores_4', 0)}
-                    - **Local:** {st.session_state.last_result.get('local', '')}
-                    - **Próximo concurso:** {st.session_state.last_result.get('data_proximo', '')}
-                    """)
-            else:
-                st.info("📅 Faça o download para ver o último resultado")
-
-# ----------------------------------------------------
-# ANÁLISE ESTATÍSTICA
-# ----------------------------------------------------
-elif menu == "📊 Análise Estatística":
-    
-    if not st.session_state.stats:
-        st.warning("⚠️ Faça o download dos resultados primeiro no menu 'Download Resultados'")
-    else:
-        stats = st.session_state.stats
-        freq = stats["frequencies"]
-        
-        df_freq = pd.DataFrame(
-            [(n, freq[n]) for n in range(1, 61)],
-            columns=["Número", "Frequência"]
-        )
-        
-        # Layout responsivo para métricas
-        if is_mobile:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Total Concursos</h3>
-                    <div class="value">{stats['total_games']}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Nº Mais Sorteado</h3>
-                    <div class="value">{freq.most_common(1)[0][0]:02d}</div>
-                    <div>{freq.most_common(1)[0][1]}x</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                media = sum(freq.values()) / 60
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Média por Nº</h3>
-                    <div class="value">{media:.1f}</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Nº Menos Sorteado</h3>
-                    <div class="value">{freq.most_common()[-1][0]:02d}</div>
-                    <div>{freq.most_common()[-1][1]}x</div>
-                </div>
-                """, unsafe_allow_html=True)
-        else:
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Total de Concursos</h3>
-                    <div class="value">{stats['total_games']}</div>
-                    <div>histórico completo</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                most_common = freq.most_common(1)[0]
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Nº Mais Sorteado</h3>
-                    <div class="value">{most_common[0]:02d}</div>
-                    <div>{most_common[1]} vezes</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col3:
-                least_common = freq.most_common()[-1]
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Nº Menos Sorteado</h3>
-                    <div class="value">{least_common[0]:02d}</div>
-                    <div>{least_common[1]} vezes</div>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col4:
-                media = sum(freq.values()) / 60
-                st.markdown(f"""
-                <div class="metric-card">
-                    <h3>Média por Nº</h3>
-                    <div class="value">{media:.1f}</div>
-                    <div>aparições</div>
-                </div>
-                """, unsafe_allow_html=True)
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Gráfico de frequência
-        st.markdown("### 📈 Distribuição de Frequência")
-        
-        fig = px.bar(
-            df_freq,
-            x="Número",
-            y="Frequência",
-            color="Frequência",
-            color_continuous_scale=['#667eea', '#764ba2'],
-            text="Frequência"
-        )
-        
-        media = sum(freq.values()) / 60
-        fig.add_hline(
-            y=media,
-            line_dash="dash",
-            line_color="red",
-            annotation_text=f"Média: {media:.1f}"
-        )
-        
-        fig.update_traces(textposition='outside')
-        fig.update_layout(height=500)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Top e Flop - responsivo
-        if is_mobile:
-            st.markdown("### 🔥 Top 15 Números Mais Sorteados")
-            top15 = df_freq.nlargest(15, 'Frequência').reset_index(drop=True)
-            top15.index = range(1, 16)
-            st.dataframe(
-                top15,
-                use_container_width=True,
-                hide_index=False,
-                column_config={
-                    "Número": "Nº",
-                    "Frequência": "Vezes"
-                }
-            )
-            
-            st.markdown("### ❄️ Top 15 Números Menos Sorteados")
-            bottom15 = df_freq.nsmallest(15, 'Frequência').reset_index(drop=True)
-            bottom15.index = range(1, 16)
-            st.dataframe(
-                bottom15,
-                use_container_width=True,
-                hide_index=False,
-                column_config={
-                    "Número": "Nº",
-                    "Frequência": "Vezes"
-                }
-            )
-        else:
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown("### 🔥 Top 15 Números Mais Sorteados")
-                top15 = df_freq.nlargest(15, 'Frequência').reset_index(drop=True)
-                top15.index = range(1, 16)
-                st.dataframe(
-                    top15,
-                    use_container_width=True,
-                    hide_index=False,
-                    column_config={
-                        "Número": "Nº",
-                        "Frequência": "Vezes"
-                    }
-                )
-            
-            with col2:
-                st.markdown("### ❄️ Top 15 Números Menos Sorteados")
-                bottom15 = df_freq.nsmallest(15, 'Frequência').reset_index(drop=True)
-                bottom15.index = range(1, 16)
-                st.dataframe(
-                    bottom15,
-                    use_container_width=True,
-                    hide_index=False,
-                    column_config={
-                        "Número": "Nº",
-                        "Frequência": "Vezes"
-                    }
-                )
-        
-        st.markdown("---")
-        
-        # Pares mais frequentes
-        st.markdown("### 🤝 Top 20 Pares Mais Frequentes")
-        
-        pairs = stats["pairs"].most_common(20)
-        df_pairs = pd.DataFrame(
-            [(f"{p[0]:02d} - {p[1]:02d}", c) for p, c in pairs],
-            columns=["Par", "Frequência"]
-        )
-        df_pairs.index = range(1, 21)
-        
-        st.dataframe(
-            df_pairs,
-            use_container_width=True,
-            hide_index=False,
-            column_config={
-                "Par": "Combinação",
-                "Frequência": "Ocorrências"
-            }
-        )
-
-# ----------------------------------------------------
-# GERADOR DE JOGOS
-# ----------------------------------------------------
-elif menu == "🎰 Gerador de Jogos":
-    
-    if not st.session_state.stats:
-        st.warning("⚠️ Faça o download dos resultados primeiro no menu 'Download Resultados'")
-    else:
-        stats = st.session_state.stats
-        freq = stats["frequencies"]
-        
-        all_freq = freq.most_common()
-        hot = [n for n, _ in all_freq[:20]]
-        cold = [n for n, _ in all_freq[-20:]]
-        
-        st.markdown("### ⚙️ Configuração do Gerador")
-        
-        # Layout responsivo para configurações
-        if is_mobile:
-            estrategia = st.selectbox(
-                "🎯 Estratégia",
-                [
-                    "Aleatório",
-                    "Números Quentes",
-                    "Números Frios",
-                    "Mistura Quente/Frio (3/3)",
-                    "Par/Ímpar Balanceado"
-                ],
-                key="select_estrategia"
-            )
-            
-            conjuntos = st.number_input(
-                "📦 Conjuntos", 
-                1, 10, 2,
-                key="num_conjuntos"
-            )
-            
-            jogos = st.number_input(
-                "🎲 Jogos por conjunto", 
-                1, 20, 6,
-                key="num_jogos"
-            )
-        else:
-            col1, col2, col3 = st.columns(3)
-            
-            with col1:
-                estrategia = st.selectbox(
-                    "🎯 Estratégia",
-                    [
-                        "Aleatório",
-                        "Números Quentes",
-                        "Números Frios",
-                        "Mistura Quente/Frio (3/3)",
-                        "Par/Ímpar Balanceado"
-                    ],
-                    key="select_estrategia"
-                )
-            
-            with col2:
-                conjuntos = st.number_input(
-                    "📦 Conjuntos", 
-                    1, 10, 2,
-                    key="num_conjuntos"
-                )
-            
-            with col3:
-                jogos = st.number_input(
-                    "🎲 Jogos por conjunto", 
-                    1, 20, 6,
-                    key="num_jogos"
-                )
-        
-        # Mostrar números em destaque
-        st.markdown("### 🔥 Números em Destaque")
-        
-        col_hot, col_cold = st.columns(2)
-        
-        with col_hot:
-            st.markdown("**Números Quentes (mais frequentes):**")
-            hot_html = ""
-            for n in sorted(hot[:15]):
-                hot_html += f"<span class='number-square number-hot'>{n:02d}</span>"
-            st.markdown(f"<div class='numbers-container'>{hot_html}</div>", unsafe_allow_html=True)
-        
-        with col_cold:
-            st.markdown("**Números Frios (menos frequentes):**")
-            cold_html = ""
-            for n in sorted(cold[:15]):
-                cold_html += f"<span class='number-square number-cold'>{n:02d}</span>"
-            st.markdown(f"<div class='numbers-container'>{cold_html}</div>", unsafe_allow_html=True)
-        
-        if st.button("🎰 Gerar Jogos", use_container_width=True, key="btn_gerar"):
-            
-            resultados = []
-            
-            for c in range(conjuntos):
-                grupo = []
-                
-                for _ in range(jogos):
-                    if estrategia == "Aleatório":
-                        game = sorted(random.sample(range(1,61), 6))
-                    
-                    elif estrategia == "Números Quentes":
-                        game = sorted(random.sample(hot, 6))
-                    
-                    elif estrategia == "Números Frios":
-                        game = sorted(random.sample(cold, 6))
-                    
-                    elif estrategia == "Mistura Quente/Frio (3/3)":
-                        game = sorted(random.sample(hot, 3) + random.sample(cold, 3))
-                    
-                    elif estrategia == "Par/Ímpar Balanceado":
-                        pares = [n for n in range(1,61) if n%2==0]
-                        impares = [n for n in range(1,61) if n%2==1]
-                        game = sorted(random.sample(pares, 3) + random.sample(impares, 3))
-                    
-                    grupo.append(game)
-                
-                resultados.append(grupo)
-            
-            st.markdown("---")
-            
-            for i, grupo in enumerate(resultados):
-                st.markdown(f"### 📦 Conjunto {i+1}")
-                
-                # Responsivo: mobile 2 colunas, desktop 3 colunas
-                if is_mobile:
-                    cols = st.columns(2)
-                else:
-                    cols = st.columns(3)
-                
-                for idx, jogo in enumerate(grupo):
-                    with cols[idx % len(cols)]:
-                        st.markdown(f"**Jogo {idx+1}**")
-                        
-                        num_html = ""
-                        for num in jogo:
-                            if num in hot:
-                                num_html += f"<span class='number-square number-hot'>{num:02d}</span>"
-                            elif num in cold:
-                                num_html += f"<span class='number-square number-cold'>{num:02d}</span>"
-                            else:
-                                num_html += f"<span class='number-square'>{num:02d}</span>"
-                        
-                        st.markdown(f"<div class='numbers-container'>{num_html}</div>", unsafe_allow_html=True)
-                
-                st.markdown("---")
-                
-                df = pd.DataFrame(grupo, columns=[f"N{i+1}" for i in range(6)])
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    label=f"📥 Download Conjunto {i+1} (CSV)",
-                    data=csv,
-                    file_name=f"megasena_conjunto_{i+1}.csv",
-                    mime="text/csv",
-                    key=f"download_conjunto_{i}"
-                )
-
-# ----------------------------------------------------
-# BANNER DE DOAÇÃO
-# ----------------------------------------------------
-st.markdown("""
 <div class="donation-banner">
     <div class="banner-content">
         <span style="font-size: 1.5rem;">💚</span>
@@ -991,23 +665,6 @@ function copyPIX() {
         alert('✅ PIX copiado! Obrigado por apoiar o projeto!');
     });
 }
-
-// Detectar mobile
-if (window.innerWidth <= 768) {
-    // Criar um elemento invisível para comunicar com Streamlit
-    const mobileDetect = document.createElement('div');
-    mobileDetect.id = 'mobile-detected';
-    mobileDetect.style.display = 'none';
-    document.body.appendChild(mobileDetect);
-    
-    // Atualizar o estado no Streamlit (via session state)
-    setTimeout(function() {
-        window.parent.postMessage({
-            type: 'streamlit:setComponentValue',
-            value: true
-        }, '*');
-    }, 100);
-}
 </script>
 """, unsafe_allow_html=True)
 
@@ -1017,30 +674,3 @@ st.markdown("""
     <p style='font-size: 0.8rem;'>© 2024 Mega-Sena Analyst PRO - v2.0 | Dados oficiais da Caixa Econômica Federal</p>
 </div>
 """, unsafe_allow_html=True)
-
-# Detecção mobile via JavaScript (simples)
-st.markdown("""
-<script>
-if (window.innerWidth <= 768) {
-    window.parent.postMessage({
-        type: 'streamlit:setComponentValue',
-        value: true
-    }, '*');
-}
-</script>
-""", unsafe_allow_html=True)
-
-# Atualizar is_mobile baseado na largura da tela
-st.markdown("""
-<style>
-    /* Isso é apenas para forçar uma atualização */
-</style>
-""", unsafe_allow_html=True)
-
-# Verificar se é mobile baseado na largura da tela
-# Nota: Isso é uma simplificação - em produção, use JavaScript para detecção precisa
-if 'mobile' not in st.session_state:
-    st.session_state.mobile = False
-    # Você pode adicionar um parâmetro na URL para testes
-    if st.query_params.get('mobile', ['false'])[0] == 'true':
-        st.session_state.mobile = True
