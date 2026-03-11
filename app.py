@@ -26,7 +26,6 @@ st.markdown("""
     /* Remover elementos padrão do Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
     
     /* Estilo global */
     .main {
@@ -131,9 +130,14 @@ st.markdown("""
         box-shadow: 0 10px 20px rgba(102,126,234,0.4);
     }
     
-    /* Sidebar */
-    .css-1d391kg {
+    /* Sidebar corrigida */
+    [data-testid="stSidebar"] {
         background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    /* Texto da sidebar */
+    [data-testid="stSidebar"] * {
+        color: white !important;
     }
     
     /* Título da sidebar */
@@ -161,6 +165,31 @@ st.markdown("""
         color: #666;
         display: inline-block;
         margin: 5px;
+    }
+            
+    /* RESPONSIVO MOBILE */
+    @media (max-width: 600px) {
+
+        .donation-banner {
+            padding: 8px 10px;
+        }
+
+        .banner-content {
+            gap: 8px;
+            flex-direction: column;
+        }
+
+        .pix-card {
+            font-size: 0.9rem;
+            padding: 6px 12px;
+            gap: 8px;
+        }
+
+        .copy-button {
+            padding: 4px 10px;
+            font-size: 0.8rem;
+        }
+
     }
 </style>
 """, unsafe_allow_html=True)
